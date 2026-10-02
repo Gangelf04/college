@@ -1,7 +1,8 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { ArrowLeft, Bell, Heart } from 'lucide-react'
+import { ArrowLeft, Bell } from 'lucide-react'
+import { FavoriteButton } from '@/components/favorite-button'
 import {
   players,
   positionLabels,
@@ -89,9 +90,7 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
           </div>
         </div>
         <div className="flex items-center gap-1">
-          <button type="button" className={ghostBtn} aria-label="Favorite">
-            <Heart className="size-4" />
-          </button>
+          <FavoriteButton playerId={player.id} playerName={player.name} />
           <button type="button" className={ghostBtn} aria-label="Set alert">
             <Bell className="size-4" />
           </button>

@@ -8,6 +8,7 @@ import { players as allPlayers, formatMoney, type Position } from '@/lib/data'
 import { Sparkline } from '@/components/sparkline'
 import { ChangePill } from '@/components/change-pill'
 import { PlayerAvatar } from '@/components/player-avatar'
+import { FavoriteButton } from '@/components/favorite-button'
 
 const positionFilters: ('ALL' | Position)[] = ['ALL', 'QB', 'RB', 'WR', 'TE', 'EDGE', 'DL', 'LB', 'CB', 'S', 'OT']
 
@@ -65,10 +66,10 @@ export function PlayerDirectory() {
       {/* List */}
       <ol className="mt-2">
         {rows.map((p) => (
-          <li key={p.id}>
+          <li key={p.id} className="flex items-center gap-2 border-b border-border">
             <Link
               href={`/players/${p.id}`}
-              className="group grid grid-cols-[1.75rem_1fr_auto] items-center gap-4 border-b border-border py-3.5"
+              className="group grid flex-1 grid-cols-[1.75rem_1fr_auto] items-center gap-4 py-3.5"
             >
               <span className="font-mono text-xs tabular-nums text-muted-foreground">
                 {String(p.rank).padStart(2, '0')}
@@ -98,6 +99,7 @@ export function PlayerDirectory() {
                 </span>
               </span>
             </Link>
+            <FavoriteButton playerId={p.id} playerName={p.name} />
           </li>
         ))}
       </ol>

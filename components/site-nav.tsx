@@ -9,6 +9,7 @@ const links = [
   { href: '/players', label: 'Prospects' },
   { href: '/auctions', label: 'Auctions' },
   { href: '/radar', label: 'Radar' },
+  { href: '/favorites', label: 'Favorites' },
 ]
 
 function isActive(pathname: string, href: string) {
