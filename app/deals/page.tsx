@@ -9,13 +9,13 @@ export const metadata: Metadata = {
 
 export default function DealsPage() {
   return (
-    <div className="mx-auto max-w-6xl px-6 py-14 md:py-20">
-      <header className="mb-10">
+    <div className="mx-auto max-w-5xl px-6 py-8 md:py-10">
+      <header className="mb-6">
         <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
           Buy it now
         </span>
-        <h1 className="mt-3 font-display text-4xl font-light tracking-tight text-foreground">Deals</h1>
-        <p className="mt-2 max-w-2xl text-pretty text-sm leading-relaxed text-muted-foreground">
+        <h1 className="mt-2 font-display text-2xl font-light tracking-tight text-foreground">Deals</h1>
+        <p className="mt-1 max-w-2xl text-pretty text-sm leading-relaxed text-muted-foreground">
           New eBay Buy It Now listings priced 20% or more below the card&apos;s 90-day median sale. Prices
           are the listing price only — shipping is never included.
         </p>
