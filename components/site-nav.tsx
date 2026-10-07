@@ -8,6 +8,7 @@ const links = [
   { href: '/', label: 'Market' },
   { href: '/players', label: 'Prospects' },
   { href: '/auctions', label: 'Auctions' },
+  { href: '/deals', label: 'Deals' },
   { href: '/radar', label: 'Radar' },
   { href: '/favorites', label: 'Favorites' },
 ]
