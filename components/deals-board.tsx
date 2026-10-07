@@ -2,13 +2,12 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { ArrowUpRight, Clock, Heart, Tag } from 'lucide-react'
+import { ArrowUpRight, Heart } from 'lucide-react'
 import { players, formatMoney, type Player } from '@/lib/data'
 import { deals, median, dealDiscount, formatListedAgo, dealsCheckedMinutesAgo, type Deal } from '@/lib/deals'
 import { useFavorites } from '@/lib/favorites'
 import { PlayerAvatar } from '@/components/player-avatar'
 import { FavoriteButton } from '@/components/favorite-button'
-import { Sparkline } from '@/components/sparkline'
 import { cn } from '@/lib/utils'
 
 type SortKey = 'discount' | 'newest' | 'price'
@@ -42,171 +41,109 @@ function cardLabel(deal: Deal) {
   return `${deal.subset} · ${parallel}`
 }
 
-function DealRow({
-  item,
-  selected,
-  onSelect,
-}: {
-  item: DealWithPlayer
-  selected: boolean
-  onSelect: () => void
-}) {
-  const { deal, player: p, discount } = item
-
+function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <div
-      className={cn(
-        'relative flex items-center gap-3 border-b border-border px-3 py-2.5 transition-colors last:border-b-0',
-        selected ? 'bg-secondary/60' : 'hover:bg-secondary/30',
-      )}
-    >
-      {selected && <span className="absolute inset-y-0 left-0 w-px bg-primary" aria-hidden />}
-      <button
-        type="button"
-        onClick={onSelect}
-        aria-pressed={selected}
-        aria-label={`${p.name}, ${money(deal.askCents)}, ${Math.round(discount * 100)}% under median`}
-        className="flex min-w-0 flex-1 items-center gap-3 text-left focus-visible:outline-none"
-      >
-        <PlayerAvatar player={p} size={28} />
-        <span className="min-w-0 flex-1">
-          <span className="flex items-baseline gap-2">
-            <span className="truncate text-sm font-medium text-foreground">{p.name}</span>
-            <span className="hidden shrink-0 text-xs text-muted-foreground xl:inline">
-              {p.position} · {p.school}
-            </span>
-          </span>
-          <span className="mt-0.5 block truncate font-mono text-[11px] text-muted-foreground">
-            {deal.product} · {cardLabel(deal)}
-          </span>
-        </span>
-        <Sparkline
-          data={deal.compsCents}
-          positive
-          width={56}
-          height={18}
-          strokeWidth={1.2}
-          className="hidden shrink-0 opacity-60 lg:block"
-        />
-        <span className="shrink-0 text-right">
-          <span className="block font-mono text-sm tabular-nums text-foreground">{money(deal.askCents)}</span>
-          <span className="block font-mono text-[11px] tabular-nums text-gain">
-            −{Math.round(discount * 100)}%
-          </span>
-        </span>
-        <span className="hidden w-8 shrink-0 text-right font-mono text-[11px] tabular-nums text-muted-foreground lg:block">
-          {formatListedAgo(deal.listedHoursAgo).replace(' ago', '')}
-        </span>
-      </button>
-      <FavoriteButton playerId={p.id} playerName={p.name} />
-    </div>
+    <h3 className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">{children}</h3>
   )
 }
 
-function DealDetail({ item }: { item: DealWithPlayer }) {
+function DealCard({ item }: { item: DealWithPlayer }) {
   const { deal, player: p, median: med, discount } = item
   const saving = med - deal.askCents
-  const comps = [...deal.compsCents].reverse().slice(0, 3)
+  const comps = [...deal.compsCents].reverse().slice(0, 2)
+  const headingId = `deal-${deal.id}`
 
   return (
-    <div className="p-4">
-      <div className="flex items-center justify-between gap-3">
-        <Link href={`/players/${p.id}`} className="group flex min-w-0 items-center gap-2.5">
-          <PlayerAvatar player={p} size={28} />
+    <article
+      aria-labelledby={headingId}
+      className="flex flex-col rounded-lg border border-border bg-card transition-colors hover:border-muted-foreground/30"
+    >
+      <header className="flex items-center gap-3 p-4 pb-3">
+        <Link href={`/players/${p.id}`} className="group flex min-w-0 flex-1 items-center gap-3">
+          <PlayerAvatar player={p} size={32} />
           <span className="min-w-0">
-            <span className="block truncate text-sm font-medium text-foreground transition-colors group-hover:text-primary">
+            <span
+              id={headingId}
+              className="block truncate text-sm font-medium text-foreground transition-colors group-hover:text-primary"
+            >
               {p.name}
             </span>
-            <span className="block truncate text-[11px] text-muted-foreground">
+            <span className="block truncate font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
               {p.position} · {p.school}
             </span>
           </span>
         </Link>
-        <span className="inline-flex shrink-0 items-center gap-1 font-mono text-[11px] text-gain">
-          <Tag className="size-3" aria-hidden />−{Math.round(discount * 100)}%
+        <FavoriteButton playerId={p.id} playerName={p.name} />
+      </header>
+
+      <div className="px-4">
+        <p className="truncate text-sm text-foreground">{cardLabel(deal)}</p>
+        <p className="truncate text-xs text-muted-foreground">{deal.product}</p>
+      </div>
+
+      <div className="flex items-end justify-between gap-3 px-4 pb-4 pt-3">
+        <div className="flex flex-col">
+          <span className="font-display text-2xl font-light tabular-nums text-foreground">
+            {money(deal.askCents)}
+          </span>
+          <span className="font-mono text-xs tabular-nums text-gain">
+            −{Math.round(discount * 100)}% vs median
+          </span>
+        </div>
+        <span className="font-mono text-[11px] tabular-nums text-muted-foreground">
+          {formatListedAgo(deal.listedHoursAgo)}
         </span>
       </div>
 
-      <p className="mt-3 line-clamp-2 font-mono text-[10px] uppercase leading-relaxed tracking-[0.06em] text-muted-foreground">
-        {deal.title}
-      </p>
-
-      <div className="mt-4 flex items-end justify-between gap-3">
-        <p className="font-display text-3xl font-light tabular-nums tracking-tight text-foreground">
-          {money(deal.askCents)}
-        </p>
-        <a
-          href="https://www.ebay.com"
-          target="_blank"
-          rel="noopener noreferrer sponsored"
-          className="mb-1 inline-flex items-center gap-1 text-xs text-primary transition-colors hover:text-primary/80"
-        >
-          View on eBay
-          <ArrowUpRight className="size-3" aria-hidden />
-          <span className="sr-only">(opens in a new tab)</span>
-        </a>
-      </div>
-
-      <dl className="mt-3 grid grid-cols-3 gap-3 border-y border-border py-2.5">
+      <dl className="grid grid-cols-2 gap-3 border-t border-border px-4 py-3">
         <div>
           <dt className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Median</dt>
-          <dd className="mt-1 font-mono text-sm tabular-nums text-foreground">{formatMoney(med, 0)}</dd>
+          <dd className="mt-0.5 font-mono text-sm tabular-nums text-foreground">{formatMoney(med, 0)}</dd>
         </div>
         <div>
           <dt className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">You save</dt>
-          <dd className="mt-1 font-mono text-sm tabular-nums text-gain">{formatMoney(saving, 0)}</dd>
-        </div>
-        <div>
-          <dt className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Listed</dt>
-          <dd className="mt-1 inline-flex items-center gap-1 font-mono text-sm tabular-nums text-foreground">
-            <Clock className="size-3 text-muted-foreground" aria-hidden />
-            {formatListedAgo(deal.listedHoursAgo).replace(' ago', '')}
-          </dd>
+          <dd className="mt-0.5 font-mono text-sm tabular-nums text-gain">{formatMoney(saving, 0)}</dd>
         </div>
       </dl>
 
-      <div className="mt-4">
+      <div className="border-t border-border p-4">
         <div className="flex items-baseline justify-between">
-          <h3 className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground">Recent sales</h3>
-          <span className="font-mono text-[11px] text-muted-foreground">{deal.compsCents.length} · 90d</span>
+          <SectionLabel>Recent sales</SectionLabel>
+          <span className="font-mono text-[10px] text-muted-foreground">{deal.compsCents.length} · 90d</span>
         </div>
-        <ul className="mt-1.5">
-          {comps.map((c, i) => {
-            const over = (c - deal.askCents) / deal.askCents
-            return (
-              <li
-                key={i}
-                className="flex items-center justify-between border-b border-border py-1.5 last:border-b-0"
-              >
-                <span className="text-xs text-muted-foreground">{i === 0 ? 'Latest' : `Sale ${i + 1}`}</span>
-                <span className="flex items-baseline gap-3">
-                  <span className="font-mono text-[11px] tabular-nums text-muted-foreground">
-                    +{Math.round(over * 100)}% vs ask
-                  </span>
-                  <span className="w-16 text-right font-mono text-sm tabular-nums text-foreground">
-                    {formatMoney(c, 0)}
-                  </span>
-                </span>
-              </li>
-            )
-          })}
+        <ul className="mt-2 flex flex-col gap-1.5">
+          {comps.map((c, i) => (
+            <li key={i} className="flex items-baseline justify-between gap-3">
+              <span className="text-xs text-muted-foreground">{i === 0 ? 'Latest' : 'Previous'}</span>
+              <span className="font-mono text-sm tabular-nums text-foreground">{formatMoney(c, 0)}</span>
+            </li>
+          ))}
         </ul>
       </div>
-    </div>
+
+      <a
+        href="https://www.ebay.com"
+        target="_blank"
+        rel="noopener noreferrer sponsored"
+        className="mt-auto flex items-center justify-center gap-1 border-t border-border py-2.5 text-xs text-primary transition-colors hover:bg-secondary/40"
+      >
+        View on eBay
+        <ArrowUpRight className="size-3" aria-hidden />
+        <span className="sr-only">(opens in a new tab)</span>
+      </a>
+    </article>
   )
 }
 
 export function DealsBoard() {
   const [sort, setSort] = useState<SortKey>('discount')
   const [favoritesOnly, setFavoritesOnly] = useState(false)
-  const [selectedId, setSelectedId] = useState<string | null>(null)
   const { ids } = useFavorites()
 
   const visible = sortDeals(
     favoritesOnly ? enriched.filter((d) => ids.includes(d.player.id)) : enriched,
     sort,
   )
-  const selected = visible.find((d) => d.deal.id === selectedId) ?? visible[0]
 
   return (
     <div>
@@ -245,7 +182,7 @@ export function DealsBoard() {
         </span>
       </div>
 
-      {visible.length === 0 || !selected ? (
+      {visible.length === 0 ? (
         <div className="mt-6 rounded-lg border border-border py-16 text-center">
           <p className="text-sm text-foreground">No deals on your favorites right now</p>
           <p className="mx-auto mt-2 max-w-sm text-pretty text-sm leading-relaxed text-muted-foreground">
@@ -253,27 +190,10 @@ export function DealsBoard() {
           </p>
         </div>
       ) : (
-        <div className="mt-4 overflow-hidden rounded-lg border border-border md:grid md:grid-cols-[minmax(0,1fr)_280px] md:items-start">
-          <div>
-            {visible.map((item) => {
-              const isSelected = item.deal.id === selected.deal.id
-              return (
-                <div key={item.deal.id}>
-                  <DealRow item={item} selected={isSelected} onSelect={() => setSelectedId(item.deal.id)} />
-                  {isSelected && (
-                    <div className="border-b border-border bg-card md:hidden">
-                      <DealDetail item={item} />
-                    </div>
-                  )}
-                </div>
-              )
-            })}
-          </div>
-          <aside aria-label="Deal details" className="hidden border-l border-border bg-card md:block">
-            <div>
-              <DealDetail item={selected} />
-            </div>
-          </aside>
+        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {visible.map((item) => (
+            <DealCard key={item.deal.id} item={item} />
+          ))}
         </div>
       )}
     </div>
