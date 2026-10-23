@@ -56,7 +56,7 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
         All games
       </Link>
 
-      <header className="mt-6 border-b border-border pb-6">
+      <header className="mt-6 rounded-lg border border-border bg-card p-5 md:p-6">
         <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
           {game.day}, {game.date} · {game.time} ET · {game.network} · Week {game.week}
         </p>

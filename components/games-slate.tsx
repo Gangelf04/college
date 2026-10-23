@@ -2,10 +2,11 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
-import { ChevronRight } from 'lucide-react'
+import { ArrowUpRight } from 'lucide-react'
 import { formatMoney } from '@/lib/data'
 import { useFavorites } from '@/lib/favorites'
 import { cn } from '@/lib/utils'
+import { ChangePill } from '@/components/change-pill'
 import { games, gamesByDay, topTracked, trackedIn, type Game, type GameTeam } from '@/lib/games'
 
 type Filter = 'all' | 'ranked' | 'favorites'
@@ -16,69 +17,89 @@ const filters: { key: Filter; label: string }[] = [
   { key: 'favorites', label: 'My favorites' },
 ]
 
-function TeamLine({ team, side }: { team: GameTeam; side: 'away' | 'home' }) {
+function TeamRow({ team, side }: { team: GameTeam; side: 'away' | 'home' }) {
   return (
-    <div className="flex min-w-0 items-baseline gap-2">
-      <span className="w-5 shrink-0 text-right font-mono text-[11px] tabular-nums text-muted-foreground">
-        {team.rank ?? ''}
+    <div className="flex items-center gap-3">
+      <span
+        className="flex h-8 w-11 shrink-0 items-center justify-center rounded-md bg-secondary font-mono text-[10px] font-medium tracking-wider text-foreground"
+        aria-hidden
+      >
+        {team.abbr}
       </span>
-      <span className="truncate text-sm text-foreground">
-        {side === 'home' && <span className="text-muted-foreground">@ </span>}
-        {team.name}
-      </span>
+      <div className="min-w-0 flex-1">
+        <span className="flex items-baseline gap-1.5 truncate text-sm text-foreground">
+          {team.rank && (
+            <span className="font-mono text-[11px] tabular-nums text-muted-foreground">#{team.rank}</span>
+          )}
+          <span className="truncate">{team.name}</span>
+        </span>
+        <span className="block font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+          {side === 'home' ? 'Home' : 'Away'} · {team.tracked.length} tracked
+        </span>
+      </div>
       <span className="shrink-0 font-mono text-xs tabular-nums text-muted-foreground">
         {team.record}
-        {team.confRecord !== '—' && <span className="hidden sm:inline"> ({team.confRecord})</span>}
+        {team.confRecord !== '—' && ` (${team.confRecord})`}
       </span>
     </div>
   )
 }
 
-function GameRow({ game, favoriteIds }: { game: Game; favoriteIds: string[] }) {
+function GameCard({ game, favoriteIds }: { game: Game; favoriteIds: string[] }) {
   const top = topTracked(game)
-  const tracked = trackedIn(game).length
-  const hasFavorite = trackedIn(game).some((p) => p.playerId && favoriteIds.includes(p.playerId))
+  const tracked = trackedIn(game)
+  const hasFavorite = tracked.some((p) => p.playerId && favoriteIds.includes(p.playerId))
+  const totalValue = tracked.reduce((sum, p) => sum + p.priceCents, 0)
 
   return (
-    <li>
-      <Link
-        href={`/games/${game.id}`}
-        className="group grid grid-cols-[4.5rem_1fr_auto] items-center gap-4 py-3.5 transition-colors hover:bg-secondary/40 md:grid-cols-[5.5rem_1fr_13rem_auto] md:px-2"
-      >
-        <div className="flex flex-col">
-          <span className="font-mono text-xs tabular-nums text-foreground">{game.time}</span>
+    <Link
+      href={`/games/${game.id}`}
+      aria-label={`${game.away.name} at ${game.home.name}, ${game.day} ${game.time}`}
+      className="group flex flex-col rounded-lg border border-border bg-card transition-colors hover:border-muted-foreground/30"
+    >
+      <div className="flex items-center justify-between gap-3 px-4 pt-4">
+        <span className="font-mono text-[11px] tabular-nums text-foreground">
+          {game.time} <span className="text-muted-foreground">ET</span>
+        </span>
+        <span className="flex items-center gap-2">
+          {hasFavorite && (
+            <span className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-wider text-primary">
+              <span className="size-1.5 rounded-full bg-primary" aria-hidden />
+              Favorite
+            </span>
+          )}
           <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
             {game.network}
           </span>
-        </div>
+        </span>
+      </div>
 
-        <div className="flex min-w-0 flex-col gap-1">
-          <TeamLine team={game.away} side="away" />
-          <TeamLine team={game.home} side="home" />
-        </div>
+      <div className="flex flex-col gap-3 px-4 py-4">
+        <TeamRow team={game.away} side="away" />
+        <TeamRow team={game.home} side="home" />
+      </div>
 
-        {top && (
-          <div className="hidden min-w-0 flex-col items-end md:flex">
-            <span className="flex max-w-full items-center gap-1.5 truncate text-sm text-foreground">
-              {hasFavorite && <span className="size-1.5 shrink-0 rounded-full bg-primary" aria-label="Has a favorite" />}
-              <span className="truncate">{top.name}</span>
-              <span className="font-mono text-sm tabular-nums">{formatMoney(top.priceCents)}</span>
+      <div className="mt-auto flex items-end justify-between gap-3 border-t border-border px-4 py-3">
+        {top ? (
+          <div className="min-w-0">
+            <span className="block font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+              Top card
             </span>
-            <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-              Top card · {tracked} tracked
+            <span className="flex items-baseline gap-2">
+              <span className="truncate text-sm text-foreground">{top.name}</span>
+              <span className="font-mono text-sm tabular-nums text-foreground">{formatMoney(top.priceCents)}</span>
+              <ChangePill value={top.changePct} showIcon={false} className="text-[11px]" />
             </span>
           </div>
+        ) : (
+          <span className="text-xs text-muted-foreground">No tracked players</span>
         )}
-
-        <div className="flex items-center gap-2">
-          <span className="font-mono text-xs tabular-nums text-muted-foreground md:hidden">{tracked}</span>
-          <ChevronRight
-            className="size-4 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-foreground"
-            aria-hidden
-          />
-        </div>
-      </Link>
-    </li>
+        <span className="flex shrink-0 items-center gap-1 font-mono text-[11px] tabular-nums text-muted-foreground transition-colors group-hover:text-foreground">
+          {formatMoney(totalValue, 0)}
+          <ArrowUpRight className="size-3.5" aria-hidden />
+        </span>
+      </div>
+    </Link>
   )
 }
 
@@ -104,9 +125,7 @@ export function GamesSlate() {
             aria-pressed={filter === f.key}
             className={cn(
               'rounded-md px-2.5 py-1 text-xs transition-colors',
-              filter === f.key
-                ? 'bg-secondary text-foreground'
-                : 'text-muted-foreground hover:text-foreground',
+              filter === f.key ? 'bg-secondary text-foreground' : 'text-muted-foreground hover:text-foreground',
             )}
           >
             {f.label}
@@ -121,10 +140,10 @@ export function GamesSlate() {
             : 'No games match this filter.'}
         </p>
       ) : (
-        <div className="mt-6 flex flex-col gap-8">
+        <div className="mt-6 flex flex-col gap-10">
           {groups.map((group) => (
             <section key={group.label} aria-labelledby={`day-${group.label}`}>
-              <div className="flex items-baseline justify-between border-b border-border pb-2">
+              <div className="mb-4 flex items-baseline justify-between">
                 <h2 id={`day-${group.label}`} className="text-sm font-medium text-foreground">
                   {group.label}
                 </h2>
@@ -132,11 +151,11 @@ export function GamesSlate() {
                   {group.games.length} {group.games.length === 1 ? 'game' : 'games'}
                 </span>
               </div>
-              <ul className="divide-y divide-border">
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {group.games.map((g) => (
-                  <GameRow key={g.id} game={g} favoriteIds={ids} />
+                  <GameCard key={g.id} game={g} favoriteIds={ids} />
                 ))}
-              </ul>
+              </div>
             </section>
           ))}
         </div>
