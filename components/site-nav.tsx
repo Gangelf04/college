@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils'
 const links = [
   { href: '/', label: 'Market' },
   { href: '/players', label: 'Prospects' },
+  { href: '/games', label: 'Games' },
   { href: '/auctions', label: 'Auctions' },
   { href: '/deals', label: 'Deals' },
   { href: '/radar', label: 'Radar' },
